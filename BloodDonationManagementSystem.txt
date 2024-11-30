@@ -1,0 +1,170 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.HashMap;
+
+public class BloodDonationManagementSystem {
+
+    public static void main(String[] args) {
+        // Main Frame
+        JFrame frame = new JFrame("Blood Donation Management System");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(700, 500);
+
+        // Layout Manager
+        CardLayout cardLayout = new CardLayout();
+        JPanel mainPanel = new JPanel(cardLayout);
+
+        // Menu Bar
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Options");
+        JMenuItem registerDonorOption = new JMenuItem("Register Donor");
+        JMenuItem manageInventoryOption = new JMenuItem("Manage Inventory");
+        JMenuItem viewDonorsOption = new JMenuItem("View Donor List");
+        menu.add(registerDonorOption);
+        menu.add(manageInventoryOption);
+        menu.add(viewDonorsOption);
+        menuBar.add(menu);
+        frame.setJMenuBar(menuBar);
+
+        // Register Donor Panel
+        JPanel registerPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        registerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel nameLabel = new JLabel("Name:");
+        JTextField nameField = new JTextField();
+
+        JLabel bloodGroupLabel = new JLabel("Blood Group:");
+        JTextField bloodGroupField = new JTextField();
+
+        JLabel contactLabel = new JLabel("Contact:");
+        JTextField contactField = new JTextField();
+
+        JLabel quantityLabel = new JLabel("Units Donated:");
+        JTextField quantityField = new JTextField();
+
+        JButton registerButton = new JButton("Register Donor");
+
+        registerPanel.add(nameLabel);
+        registerPanel.add(nameField);
+        registerPanel.add(bloodGroupLabel);
+        registerPanel.add(bloodGroupField);
+        registerPanel.add(contactLabel);
+        registerPanel.add(contactField);
+        registerPanel.add(quantityLabel);
+        registerPanel.add(quantityField);
+        registerPanel.add(new JLabel()); // Empty space
+        registerPanel.add(registerButton);
+
+        // Donor Table Panel
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        JLabel tableTitle = new JLabel("Registered Donors:", JLabel.LEFT);
+        String[] columns = {"Name", "Blood Group", "Contact", "Units Donated"};
+        DefaultTableModel tableModel = new DefaultTableModel(columns, 0);
+        JTable donorTable = new JTable(tableModel);
+        JScrollPane tableScrollPane = new JScrollPane(donorTable);
+
+        tablePanel.add(tableTitle, BorderLayout.NORTH);
+        tablePanel.add(tableScrollPane, BorderLayout.CENTER);
+
+        // Inventory Panel
+        JPanel inventoryPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        inventoryPanel.setBorder(BorderFactory.createTitledBorder("Blood Inventory Management"));
+
+        JLabel bloodGroupInventoryLabel = new JLabel("Blood Group:");
+        JTextField bloodGroupInventoryField = new JTextField();
+
+        JLabel unitsLabel = new JLabel("Units:");
+        JTextField unitsField = new JTextField();
+
+        JButton updateStockButton = new JButton("Update Stock");
+        JButton checkStockButton = new JButton("Check Stock");
+
+        inventoryPanel.add(bloodGroupInventoryLabel);
+        inventoryPanel.add(bloodGroupInventoryField);
+        inventoryPanel.add(unitsLabel);
+        inventoryPanel.add(unitsField);
+        inventoryPanel.add(updateStockButton);
+        inventoryPanel.add(checkStockButton);
+
+        // Add Panels to CardLayout
+        mainPanel.add(registerPanel, "Register Donor");
+        mainPanel.add(tablePanel, "View Donors");
+        mainPanel.add(inventoryPanel, "Manage Inventory");
+
+        frame.add(mainPanel);
+
+        // Data structure for inventory
+        HashMap<String, Integer> bloodInventory = new HashMap<>();
+
+        // Action Listeners for Menu Items
+        registerDonorOption.addActionListener(e -> cardLayout.show(mainPanel, "Register Donor"));
+        viewDonorsOption.addActionListener(e -> cardLayout.show(mainPanel, "View Donors"));
+        manageInventoryOption.addActionListener(e -> cardLayout.show(mainPanel, "Manage Inventory"));
+
+        // Action Listener for Register Button
+        registerButton.addActionListener(e -> {
+            String name = nameField.getText();
+            String bloodGroup = bloodGroupField.getText();
+            String contact = contactField.getText();
+            String quantityText = quantityField.getText();
+
+            if (name.isEmpty() || bloodGroup.isEmpty() || contact.isEmpty() || quantityText.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please fill all fields", "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                try {
+                    int quantity = Integer.parseInt(quantityText);
+
+                    // Add the data to the table
+                    tableModel.addRow(new Object[]{name, bloodGroup, contact, quantity});
+
+                    // Update inventory
+                    bloodInventory.put(bloodGroup, bloodInventory.getOrDefault(bloodGroup, 0) + quantity);
+
+                    nameField.setText("");
+                    bloodGroupField.setText("");
+                    contactField.setText("");
+                    quantityField.setText("");
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(frame, "Units must be a valid number", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // Action Listener for Update Stock Button
+        updateStockButton.addActionListener(e -> {
+            String bloodGroup = bloodGroupInventoryField.getText();
+            String unitsText = unitsField.getText();
+
+            if (bloodGroup.isEmpty() || unitsText.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please fill all fields", "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                try {
+                    int units = Integer.parseInt(unitsText);
+                    bloodInventory.put(bloodGroup, bloodInventory.getOrDefault(bloodGroup, 0) + units);
+                    bloodGroupInventoryField.setText("");
+                    unitsField.setText("");
+                    JOptionPane.showMessageDialog(frame, "Inventory updated successfully!");
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(frame, "Units must be a valid number", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // Action Listener for Check Stock Button
+        checkStockButton.addActionListener(e -> {
+            String bloodGroup = bloodGroupInventoryField.getText();
+
+            if (bloodGroup.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please enter a blood group", "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                int stock = bloodInventory.getOrDefault(bloodGroup, 0);
+                JOptionPane.showMessageDialog(frame, "Available stock for " + bloodGroup + ": " + stock + " units");
+            }
+        });
+
+        frame.setVisible(true);
+    }
+}
